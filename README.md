@@ -4,7 +4,7 @@ Este es un tablero de control interactivo desarrollado para la visualización y 
 
 !
 
-🚀 Características
+ Características
 
 Visualización de Carga: Gráfica de barras dinámica que ordena a los diseñadores por volumen de trabajos pendientes.
 
@@ -16,7 +16,7 @@ Interfaz Moderna: Diseño basado en Glassmorphism con fondo animado de estrellas
 
 Responsive: Totalmente compatible con dispositivos móviles, tablets y computadoras de escritorio.
 
-🛠️ Tecnologías Utilizadas
+Tecnologías Utilizadas
 
 HTML5/CSS3: Estructura y estilos base.
 
@@ -28,7 +28,7 @@ Chart.js: Para la generación de gráficas interactivas.
 
 SheetJS (XLSX): Para la lectura y parseo de archivos Excel.
 
-📋 Requisitos del Archivo Excel
+Requisitos del Archivo Excel
 
 Para que el dashboard procese los datos correctamente, el archivo Excel debe cumplir con lo siguiente:
 
@@ -48,7 +48,7 @@ FECHA_TRABAJO: Indica que el trabajo ha iniciado.
 
 FECHA_ENTREGA_MUESTRA: Si está vacío y tiene fecha de trabajo, se cuenta como "En Proceso".
 
-💻 Instalación y Uso
+Instalación y Uso
 
 Clona este repositorio o descarga el archivo dashboard_diseñadores.html.
 
@@ -62,7 +62,7 @@ Abre el archivo dashboard_diseñadores.html en cualquier navegador web moderno.
 
 Haz clic en "Cargar Archivo Excel" y selecciona tu base de datos de diseño.
 
-🎨 Personalización
+Personalización
 
 El diseño utiliza clases de Tailwind CSS. Si deseas cambiar los colores de la gráfica o la intensidad del brillo, puedes modificar las variables en la función actualizarUI dentro de las etiquetas <script>.
 
