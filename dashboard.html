@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Diseño 2026</title>
+    
+    <!-- Tailwind CSS para los estilos y diseño responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS (xlsx) para leer el archivo Excel en el navegador -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #0b0f19; /* Fondo oscuro base */
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Estilo para simular el cristal (Glassmorphism) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Ocultar el input de archivo por defecto */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Contenedor del logo optimizado */
+        .header-logo {
+            max-height: 120px;
+            width: auto;
+            display: block;
+            margin-bottom: 1rem;
+            /* Suave resplandor para que destaque más */
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+        }
+
+        /* Estilo de respaldo si la imagen falla */
+        .logo-fallback {
+            color: white;
+            font-weight: 800;
+            font-size: 2.5rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 0.5rem 2rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+
+    <!-- Canvas para las estrellas parpadeantes -->
+    <canvas id="starCanvas" class="fixed top-0 left-0 w-full h-full z-0 pointer-events-none"></canvas>
+
+    <!-- Contenido Principal -->
+    <div class="relative z-10 container mx-auto px-4 py-10">
+        
+        <header class="text-center mb-10 flex flex-col items-center">
+            <!-- Logo principal: Se intenta cargar el archivo PNG blanco primero -->
+            <div id="logoContainer">
+                <img src="NuevologoProtela1.png copia.png" 
+                     alt="PROTELA" 
+                     class="header-logo" 
+                     onerror="handleImageError(this)">
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                Dashboard de Diseño 2026
+            </h1>
+        </header>
+
+        <!-- Panel de Controles -->
+        <div class="glass-panel rounded-2xl p-6 mb-10 text-center max-w-lg mx-auto">
+            <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors text-white font-semibold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center w-full">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Cargar Archivo Excel
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+            </label>
+            <p class="text-xs text-gray-400 mt-3">Soporta formatos .xlsx y .xls</p>
+        </div>
+
+        <div id="loading" class="hidden text-center text-xl text-blue-400 animate-pulse mb-8">
+            Procesando base de datos...
+        </div>
+
+        <!-- Panel de Resultados -->
+        <div id="dashboardContent" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Gráfica de Pendientes -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+                <h2 class="text-2xl font-semibold mb-6 flex items-center border-b border-gray-600 pb-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse"></span>
+                    Pendientes por Diseñador
+                </h2>
+                <div class="relative h-80 w-full">
+                    <canvas id="pendientesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Resumen de Muestras -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-1 flex flex-col">
+                <h2 class="text-2xl font-semibold mb-6 flex items-center border-b border-gray-600 pb-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-400 mr-3"></span>
+                    Muestras en Proceso
+                </h2>
+                
+                <div class="flex-grow flex flex-col justify-center space-y-6">
+                    <!-- Digital -->
+                    <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                        <h3 class="text-lg font-medium text-blue-300 mb-3 uppercase tracking-wider italic">Tecnología Digital</h3>
+                        <ul class="space-y-2 text-gray-300" id="listaDigital">
+                            <!-- Inyectado por JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Convencional -->
+                    <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700 flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-purple-300 uppercase tracking-wider italic">Convencional</h3>
+                        <span id="cantConvencional" class="text-2xl font-bold text-white bg-purple-600/50 px-4 py-1 rounded-lg">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Función para manejar errores de imagen de forma encadenada
+        function handleImageError(img) {
+            // Si el nombre con "copia" falla, intentamos con el nombre original .webp
+            if (!img.src.includes('NuevologoProtela1.png.webp')) {
+                img.src = 'NuevologoProtela1.png.webp';
+            } else {
+                // Si ambos fallan, mostramos el texto de respaldo
+                const container = document.getElementById('logoContainer');
+                container.innerHTML = '<div class="logo-fallback">PROTELA</div>';
+            }
+        }
+
+        // ==========================================
+        // 1. FONDO DE ESTRELLAS PARPADEANTES
+        // ==========================================
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
+
+        function initStars() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            stars = [];
+            for (let i = 0; i < 250; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.5,
+                    alpha: Math.random(),
+                    speed: (Math.random() * 0.02) + 0.005
+                });
+            }
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                star.alpha += star.speed;
+                if (star.alpha >= 1 || star.alpha <= 0.1) {
+                    star.speed = -star.speed;
+                }
+                ctx.globalAlpha = star.alpha;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(animateStars);
+        }
+
+        window.addEventListener('resize', initStars);
+        initStars();
+        animateStars();
+
+        // ==========================================
+        // 2. LÓGICA DE PROCESAMIENTO
+        // ==========================================
+        let chartInstance = null;
+
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('dashboardContent').classList.add('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames.includes("2026") ? "2026" : workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: null });
+                procesarAlgoritmo(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function procesarAlgoritmo(data) {
+            let pendientes_por_disenador = {};
+            let muestras = {
+                DIGITAL: { REGGIANI: 0, ATEXCO: 0, MIMAKI: 0 },
+                CONVENCIONAL: 0
+            };
+
+            data.forEach(row => {
+                const cleanRow = {};
+                for (let key in row) {
+                    const cleanKey = key.trim().toUpperCase();
+                    let val = row[key];
+                    if (typeof val === 'string') val = val.trim().toUpperCase();
+                    cleanRow[cleanKey] = val;
+                }
+
+                const disenador = cleanRow["DISEÑADOR"];
+                const tecnologia = cleanRow["TECNOLOGÍA"] || cleanRow["TECNOLOGIA"];
+                const maquina = cleanRow["MÁQUINA"] || cleanRow["MAQUINA"];
+                const fechaEntrega = cleanRow["FECHA_ENTREGA"];
+                const fechaTrabajo = cleanRow["FECHA_TRABAJO"];
+                const fechaMuestra = cleanRow["FECHA_ENTREGA_MUESTRA"];
+
+                if (!disenador || disenador === "NAN" || disenador === "") return;
+
+                if (!(disenador in pendientes_por_disenador)) {
+                    pendientes_por_disenador[disenador] = 0;
+                }
+                
+                if (fechaEntrega === null || fechaEntrega === "") {
+                    pendientes_por_disenador[disenador] += 1;
+                }
+
+                const tieneTrabajo = (fechaTrabajo !== null && fechaTrabajo !== "");
+                const noTieneMuestra = (fechaMuestra === null || fechaMuestra === "");
+
+                if (tieneTrabajo && noTieneMuestra) {
+                    if (tecnologia === "DIGITAL") {
+                        if (maquina === "REGGIANI") muestras.DIGITAL.REGGIANI += 1;
+                        else if (maquina === "ATEXCO") muestras.DIGITAL.ATEXCO += 1;
+                        else if (maquina === "MIMAKI") muestras.DIGITAL.MIMAKI += 1;
+                    } else if (tecnologia === "CONVENCIONAL") {
+                        muestras.CONVENCIONAL += 1;
+                    }
+                }
+            });
+
+            const pendientesOrdenados = Object.entries(pendientes_por_disenador)
+                                            .sort((a, b) => b[1] - a[1]);
+
+            actualizarUI(pendientesOrdenados, muestras);
+        }
+
+        function actualizarUI(pendientes, muestras) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.remove('hidden');
+
+            const etiquetas = pendientes.map(item => item[0]);
+            const valores = pendientes.map(item => item[1]);
+            const ctxChart = document.getElementById('pendientesChart').getContext('2d');
+            
+            if (chartInstance) chartInstance.destroy();
+
+            const gradient = ctxChart.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+            gradient.addColorStop(1, 'rgba(168, 85, 247, 0.8)');
+
+            chartInstance = new Chart(ctxChart, {
+                type: 'bar',
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: 'Trabajos Pendientes',
+                        data: valores,
+                        backgroundColor: gradient,
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Pendientes: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }, 
+                            ticks: { color: '#cbd5e1', stepSize: 1 } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: '#cbd5e1', font: { weight: 'bold' } } 
+                        }
+                    }
+                }
+            });
+
+            const listaDigital = document.getElementById('listaDigital');
+            listaDigital.innerHTML = '';
+            for (const [maq, cant] of Object.entries(muestras.DIGITAL)) {
+                listaDigital.innerHTML += `
+                    <li class="flex justify-between items-center bg-gray-900/50 p-2 rounded border-l-4 border-blue-500">
+                        <span class="font-medium">${maq}</span>
+                        <span class="bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-sm font-bold">${cant}</span>
+                    </li>`;
+            }
+            document.getElementById('cantConvencional').textContent = muestras.CONVENCIONAL;
+        }
+    </script>
+</body>
+</html>
